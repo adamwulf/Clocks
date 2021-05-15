@@ -41,27 +41,39 @@ struct VectorClock: Clock {
     }
 
     func tock(now: VectorClock, other: VectorClock) -> VectorClock {
-        var merged = others.merging(other.others) { mine, theirs in
-            return max(mine, theirs)
-        }
-        merged[other.id] = max(others[other.id] ?? 0, other.count)
-        let myMerged = merged[id] ?? 0
-        merged.removeValue(forKey: id)
-        return VectorClock(count: max(count, myMerged) + 1, id: id, others: merged)
+        let merged = asDictionary().merging(clock: other.asDictionary())
+        return merged.clock(for: id).tick()
     }
 
     func tock(now: VectorClock, others clocks: [VectorClock]) -> VectorClock {
-        var others = others
-        others[id] = count
-        for clock in clocks {
-            others[clock.id] = max(others[clock.id] ?? 0, clock.count)
-            others.merge(clock.others) { mine, theirs in
-                return max(mine, theirs)
-            }
+        let updated = clocks.reduce(asDictionary()) { result, clock in
+            return result.merging(clock: clock.asDictionary())
         }
-        let updated = others[id] ?? count
+        return updated.clock(for: id).tick()
+    }
+}
+
+extension VectorClock {
+    func asDictionary() -> [String: UInt] {
+        return others.merging([id: count], uniquingKeysWith: { a, _ in a })
+    }
+}
+
+extension Dictionary where Key == String, Value == UInt {
+    func merging(clock: [String: UInt]) -> [String: UInt] {
+        var ret = self
+        for (key, value) in clock {
+            ret[key] = Swift.max(ret[key] ?? 0, value)
+        }
+        return ret
+    }
+
+    func clock(for id: String) -> VectorClock {
+        assert(keys.contains(id))
+        var others = self
+        let value = self[id]!
         others.removeValue(forKey: id)
-        return VectorClock(count: updated + 1, id: id, others: others)
+        return VectorClock(count: value, id: id, others: others)
     }
 }
 
