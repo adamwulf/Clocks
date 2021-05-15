@@ -42,8 +42,10 @@ final class HybridLogicalClockTests: XCTestCase {
         let now: TimeInterval = 1
 
         let clock1 = HybridLogicalClock(timestamp: now)
+        let clock2 = HybridLogicalClock(rawValue: clock1.rawValue)
 
         XCTAssertEqual(clock1.rawValue, "\(now)-0-\(clock1.id)")
+        XCTAssertEqual(clock1, clock2)
     }
 
     func testIncCount() throws {

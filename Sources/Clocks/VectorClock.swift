@@ -17,15 +17,15 @@ import Foundation
 /// each element in its vector by taking the maximum of the value in its own vector clock and the value in the vector
 /// in the received message (for every element).
 struct VectorClock: Clock {
-    let count: Int
+    let count: UInt
     let id: String
-    let others: [String: Int]
+    let others: [String: UInt]
 
     init() {
         self.init(count: 0, id: String(String.uuid(prefix: "vec").prefix(12)))
     }
 
-    init(count: Int = 0, id: String? = nil, others: [String: Int] = [:]) {
+    init(count: UInt = 0, id: String? = nil, others: [String: UInt] = [:]) {
         if id?.contains(":") ?? false {
             fatalError("Invalid Identifier. VectorClocks may not contain ':' in their id.")
         }
@@ -44,15 +44,24 @@ struct VectorClock: Clock {
         var merged = others.merging(other.others) { mine, theirs in
             return max(mine, theirs)
         }
+        merged[other.id] = max(others[other.id] ?? 0, other.count)
         let myMerged = merged[id] ?? 0
         merged.removeValue(forKey: id)
         return VectorClock(count: max(count, myMerged) + 1, id: id, others: merged)
     }
 
-    func tock(now: VectorClock, others: [VectorClock]) -> VectorClock {
-        return others.reduce(self) { result, other in
-            return result.tock(other: other)
+    func tock(now: VectorClock, others clocks: [VectorClock]) -> VectorClock {
+        var others = others
+        others[id] = count
+        for clock in clocks {
+            others[clock.id] = max(others[clock.id] ?? 0, clock.count)
+            others.merge(clock.others) { mine, theirs in
+                return max(mine, theirs)
+            }
         }
+        let updated = others[id] ?? count
+        others.removeValue(forKey: id)
+        return VectorClock(count: updated + 1, id: id, others: others)
     }
 }
 
@@ -67,7 +76,7 @@ extension VectorClock: RawRepresentable {
             !pairs.isEmpty,
             var firstPair = pairs.first,
             case let pairs = pairs[1...],
-            case let others: [String: Int] = pairs.reduce([:], { result, pair in
+            case let others: [String: UInt] = pairs.reduce([:], { result, pair in
                 var result = result
                 if pair.id == firstPair.id {
                     firstPair.count = max(pair.count, firstPair.count)
@@ -76,8 +85,7 @@ extension VectorClock: RawRepresentable {
                     result[pair.id] = max(pair.count, existing)
                 }
                 return result
-            }),
-            !others.isEmpty
+            })
         else {
             return nil
         }
@@ -85,17 +93,29 @@ extension VectorClock: RawRepresentable {
     }
 
     public var rawValue: String {
-        return "\(count)-\(id)"
+        var othersStr = ""
+        for key in others.keys.sorted() {
+            guard let count = others[key] else { continue }
+            if !othersStr.isEmpty {
+                othersStr += ":"
+            }
+            othersStr += "\(key):\(count)"
+        }
+        if othersStr.isEmpty {
+            return "\(id):\(count)"
+        } else {
+            return "\(id):\(count):\(othersStr)"
+        }
     }
 }
 
 fileprivate extension VectorClock {
-    static func parseIdCounts(from rawValue: String) -> [(id: String, count: Int)] {
+    static func parseIdCounts(from rawValue: String) -> [(id: String, count: UInt)] {
         if
             case let comps = rawValue.split(separator: ":"),
             comps.count % 2 == 0,
-            case let pairs = comps.compactMap(pairs: { id, countStr -> (id: String, count: Int)? in
-                guard let count = Int(countStr) else { return nil }
+            case let pairs = comps.compactMap(pairs: { id, countStr -> (id: String, count: UInt)? in
+                guard let count = UInt(countStr) else { return nil }
                 return (id: String(id), count: count)
             }) {
             return pairs

@@ -42,8 +42,10 @@ final class LamportClockTests: XCTestCase {
         let now: UInt = 1
 
         let clock1 = LamportClock(count: now)
+        let clock2 = LamportClock(rawValue: clock1.rawValue)
 
         XCTAssertEqual(clock1.rawValue, "\(now)-\(clock1.id)")
+        XCTAssertEqual(clock1, clock2)
     }
 
     func testIncCount() throws {
