@@ -31,7 +31,7 @@ extension Clock {
     }
 
     public func tock(now: Self, others: [Self]) -> Self {
-        guard let last = others.sorted().last else { return tick(now: now) }
+        guard let last = others.max() else { return tick(now: now) }
         return tock(now: now, other: last)
     }
 }
