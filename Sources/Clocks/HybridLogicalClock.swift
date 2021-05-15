@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct HybridLogicalClock: RawRepresentable, Equatable {
+public struct HybridLogicalClock {
     public typealias RawValue = String
 
     let timestamp: TimeInterval
@@ -21,27 +21,6 @@ public struct HybridLogicalClock: RawRepresentable, Equatable {
         self.timestamp = timestamp
         self.count = count
         self.id = id ?? String(String.uuid(prefix: "hlc").prefix(12))
-    }
-
-    // MARK: - RawRepresentable
-
-    public init?(rawValue: String) {
-        guard
-            case let comps = rawValue.split(separator: "-"),
-            comps.count >= 3,
-            let timestamp = TimeInterval(comps[0]),
-            let count = Int(comps[1]),
-            case let id = String(comps[2...].joined(separator: "-"))
-        else {
-            return nil
-        }
-        self.timestamp = timestamp
-        self.count = count
-        self.id = id
-    }
-
-    public var rawValue: String {
-        return "\(timestamp)-\(count)-\(id)"
     }
 
     // MARK: - Public
@@ -69,6 +48,28 @@ public struct HybridLogicalClock: RawRepresentable, Equatable {
                      others: [HybridLogicalClock]) -> HybridLogicalClock {
         guard let last = others.sorted().last else { return tick(timestamp: now) }
         return tock(timestamp: now, other: last)
+    }
+}
+
+// MARK: - RawRepresentable
+extension HybridLogicalClock: RawRepresentable {
+    public init?(rawValue: String) {
+        guard
+            case let comps = rawValue.split(separator: "-"),
+            comps.count >= 3,
+            let timestamp = TimeInterval(comps[0]),
+            let count = Int(comps[1]),
+            case let id = String(comps[2...].joined(separator: "-"))
+        else {
+            return nil
+        }
+        self.timestamp = timestamp
+        self.count = count
+        self.id = id
+    }
+
+    public var rawValue: String {
+        return "\(timestamp)-\(count)-\(id)"
     }
 }
 
