@@ -71,4 +71,45 @@ final class VectorClockTests: XCTestCase {
         XCTAssertEqual(clock1, clock11)
         XCTAssertEqual(clock2, clock22)
     }
+
+    func testVectorOrdering() throws {
+        let a1 = VectorClock(id: "A")
+        let b1 = VectorClock(id: "B")
+
+        // neither clock has seen the other, so they're not <
+        XCTAssertFalse(a1 < b1)
+        XCTAssertFalse(b1 < a1)
+        XCTAssertFalse(a1 > b1)
+        XCTAssertFalse(b1 > a1)
+        XCTAssertFalse(b1 == a1)
+
+        // these clocks are neither before/after each other
+        XCTAssertTrue(b1 <> a1)
+
+        let a2 = a1.tick()
+
+        XCTAssertFalse(a2 < b1)
+        XCTAssertFalse(b1 < a2)
+        XCTAssertFalse(a2 < a1)
+        XCTAssertFalse(a1 > a2)
+        XCTAssertTrue(a2 > a1)
+        XCTAssertTrue(a1 < a2)
+
+        let a3b1 = a2.tock(other: b1)
+
+        XCTAssertFalse(a3b1 < b1)
+        XCTAssertFalse(b1 < a3b1)
+
+        let b2 = b1.tick()
+
+        XCTAssertTrue(a3b1 < b2)
+
+        let b2a1 = b1.tock(other: a1)
+
+        XCTAssertFalse(a3b1 < b2a1)
+        XCTAssertFalse(b2a1 < a3b1)
+
+        // these clocks are neither before/after each other
+        XCTAssertTrue(b2a1 <> a3b1)
+    }
 }

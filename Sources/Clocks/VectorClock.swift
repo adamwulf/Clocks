@@ -150,3 +150,28 @@ fileprivate extension Array {
         return try map(pairs: transform).compactMap({ $0 })
     }
 }
+
+// MARK: - Comparable
+infix operator <> : ComparisonPrecedence
+
+extension VectorClock: Comparable {
+    public static func < (lhs: VectorClock, rhs: VectorClock) -> Bool {
+        let mine = lhs.asDictionary()
+        let theirs = rhs.asDictionary()
+        var hadLessThan = false
+        for myClock in mine {
+            guard let theirClock = theirs[myClock.key] else { continue }
+            guard myClock.value <= theirClock else { return false }
+            hadLessThan = hadLessThan || myClock.value < theirClock
+        }
+        return hadLessThan
+    }
+
+    public static func == (lhs: VectorClock, rhs: VectorClock) -> Bool {
+        return lhs.asDictionary() == rhs.asDictionary()
+    }
+
+    public static func <> (lhs: VectorClock, rhs: VectorClock) -> Bool {
+        return !(lhs < rhs) && !(rhs < lhs) && lhs != rhs
+    }
+}
