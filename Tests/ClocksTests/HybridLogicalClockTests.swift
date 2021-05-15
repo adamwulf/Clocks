@@ -19,12 +19,13 @@ final class HybridLogicalClockTests: XCTestCase {
     }
 
     func testReversingClock() throws {
+        let now = HybridLogicalClock(timestamp: 0)
         let clock1 = HybridLogicalClock(timestamp: 1)
         let clock2 = HybridLogicalClock(timestamp: 2)
         // use a previous timestamp, and ensure that our ticked clocks are after existing timestamps
-        let clock31 = clock1.tock(timestamp: 0, other: clock2)
-        let clock32 = clock1.tock(timestamp: 0, others: [clock1, clock2])
-        let clock33 = clock1.tock(timestamp: 0, others: [clock2, clock1])
+        let clock31 = clock1.tock(now: now, other: clock2)
+        let clock32 = clock1.tock(now: now, others: [clock1, clock2])
+        let clock33 = clock1.tock(now: now, others: [clock2, clock1])
 
         XCTAssert(clock2.rawValue > clock1.rawValue)
         XCTAssert(clock31.rawValue > clock2.rawValue)
@@ -46,15 +47,16 @@ final class HybridLogicalClockTests: XCTestCase {
     }
 
     func testIncCount() throws {
-        let now: TimeInterval = 1
+        let now1 = HybridLogicalClock(timestamp: 1)
+        let now2 = HybridLogicalClock(timestamp: 2)
 
-        let clock1 = HybridLogicalClock(timestamp: now)
-        let clock2 = clock1.tick(timestamp: now)
-        let clock3 = clock2.tick(timestamp: now + 1)
+        let clock1 = HybridLogicalClock(timestamp: now1.timestamp)
+        let clock2 = clock1.tick(now: now1)
+        let clock3 = clock2.tick(now: now2)
 
-        XCTAssertEqual(clock1.rawValue, "\(now)-0-\(clock1.id)")
-        XCTAssertEqual(clock2.rawValue, "\(now)-1-\(clock1.id)")
-        XCTAssertEqual(clock3.rawValue, "\(now + 1)-0-\(clock1.id)")
+        XCTAssertEqual(clock1.rawValue, "\(now1.timestamp)-0-\(clock1.id)")
+        XCTAssertEqual(clock2.rawValue, "\(now1.timestamp)-1-\(clock1.id)")
+        XCTAssertEqual(clock3.rawValue, "\(now2.timestamp)-0-\(clock1.id)")
     }
 
     func testRawRepresentable() throws {

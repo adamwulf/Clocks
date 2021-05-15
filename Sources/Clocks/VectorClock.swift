@@ -19,9 +19,11 @@ import Foundation
 struct VectorClock {
     let count: Int
     let id: String
+    let others: [String: Int]
 
     init(count: Int = 0, id: String? = nil) {
         self.count = count
         self.id = id ?? String(String.uuid(prefix: "vec").prefix(12))
+        self.others = [:]
     }
 }

@@ -14,22 +14,33 @@ import Foundation
 /// When a process sends a message, it includes its counter value with the message;
 /// On receiving a message, the receiver process sets its counter to be greater than the maximum
 /// of its own value and the received value before it considers the message received.
-struct LamportClock {
-    let count: UInt
-    let id: String
-    let others: [String: Int]
+public struct LamportClock: Clock {
+    public let count: UInt
+    public let id: String
 
-    init(count: UInt = 0, id: String? = nil) {
+    public init() {
+        let id = String(String.uuid(prefix: "lam").prefix(12))
+        self.init(count: 0, id: id)
+    }
+
+    public init(count: UInt = 0, id: String? = nil) {
         self.count = count
-        self.id = id ?? String(String.uuid(prefix: "vec").prefix(12))
-        self.others = [:]
+        self.id = id ?? String(String.uuid(prefix: "lam").prefix(12))
+    }
+
+    public func tick(now: LamportClock) -> LamportClock {
+        return LamportClock(count: max(count, now.count) + 1, id: id)
+    }
+
+    public func tock(now: LamportClock, other: LamportClock) -> LamportClock {
+        return LamportClock(count: max(count, max(now.count, other.count)) + 1, id: id)
     }
 }
 
 extension LamportClock: RawRepresentable {
-    typealias RawValue = String
+    public typealias RawValue = String
 
-    init?(rawValue: String) {
+    public init?(rawValue: String) {
         guard
             case let comps = rawValue.split(separator: "-"),
             comps.count >= 2,
@@ -41,7 +52,7 @@ extension LamportClock: RawRepresentable {
         self.init(count: count, id: id)
     }
 
-    var rawValue: String {
+    public var rawValue: String {
         return "\(count)-\(id)"
     }
 }

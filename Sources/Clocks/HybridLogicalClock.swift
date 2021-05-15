@@ -8,7 +8,7 @@
 
 import Foundation
 
-public struct HybridLogicalClock {
+public struct HybridLogicalClock: Clock {
     public typealias RawValue = String
 
     let timestamp: TimeInterval
@@ -16,6 +16,11 @@ public struct HybridLogicalClock {
     let id: String
 
     // MARK: - Init
+
+    public init() {
+        let id = String(String.uuid(prefix: "hlc").prefix(12))
+        self.init(timestamp: Date.timeIntervalSinceReferenceDate, count: 0, id: id)
+    }
 
     public init(timestamp: TimeInterval = Date.timeIntervalSinceReferenceDate, count: Int = 0, id: String? = nil) {
         self.timestamp = timestamp
@@ -25,16 +30,16 @@ public struct HybridLogicalClock {
 
     // MARK: - Public
 
-    public func tick(timestamp now: TimeInterval = Date.timeIntervalSinceReferenceDate) -> HybridLogicalClock {
-        if now > timestamp {
-            return HybridLogicalClock(timestamp: now, count: 0, id: id)
+    public func tick(now: HybridLogicalClock) -> HybridLogicalClock {
+        if now.timestamp > timestamp {
+            return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         }
         return HybridLogicalClock(timestamp: timestamp, count: count + 1, id: id)
     }
 
-    public func tock(timestamp now: TimeInterval = Date.timeIntervalSinceReferenceDate, other: HybridLogicalClock) -> HybridLogicalClock {
-        if now > timestamp && now > other.timestamp {
-            return HybridLogicalClock(timestamp: now, count: 0, id: id)
+    public func tock(now: HybridLogicalClock, other: HybridLogicalClock) -> HybridLogicalClock {
+        if now.timestamp > timestamp && now.timestamp > other.timestamp {
+            return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         } else if timestamp == other.timestamp {
             return HybridLogicalClock(timestamp: timestamp, count: max(count, other.count) + 1, id: id)
         } else if timestamp > other.timestamp {
@@ -42,12 +47,6 @@ public struct HybridLogicalClock {
         } else {
             return HybridLogicalClock(timestamp: other.timestamp, count: other.count + 1, id: id)
         }
-    }
-
-    public func tock(timestamp now: TimeInterval = Date.timeIntervalSinceReferenceDate,
-                     others: [HybridLogicalClock]) -> HybridLogicalClock {
-        guard let last = others.sorted().last else { return tick(timestamp: now) }
-        return tock(timestamp: now, other: last)
     }
 }
 
@@ -70,12 +69,5 @@ extension HybridLogicalClock: RawRepresentable {
 
     public var rawValue: String {
         return "\(timestamp)-\(count)-\(id)"
-    }
-}
-
-// MARK: - Comparable
-extension HybridLogicalClock: Comparable {
-    public static func < (lhs: HybridLogicalClock, rhs: HybridLogicalClock) -> Bool {
-        return lhs.rawValue < rhs.rawValue
     }
 }
