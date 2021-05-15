@@ -97,7 +97,7 @@ final class HybridLogicalClockTests: XCTestCase {
             XCTAssert(prev.timestamp < this.timestamp ||
                         (prev.timestamp == this.timestamp &&
                             (prev.count < this.count ||
-                                (prev.count == this.count && prev.id < this.id))))
+                                (prev.count == this.count && prev.id <= this.id))))
         }
     }
 }

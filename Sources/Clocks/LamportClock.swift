@@ -15,8 +15,8 @@ import Foundation
 /// On receiving a message, the receiver process sets its counter to be greater than the maximum
 /// of its own value and the received value before it considers the message received.
 public struct LamportClock: Clock {
-    public let count: UInt
-    public let id: String
+    let count: UInt
+    let id: String
 
     public init() {
         let id = String(String.uuid(prefix: "lam").prefix(12))
