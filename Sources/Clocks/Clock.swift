@@ -41,4 +41,7 @@ public extension Clock where RawValue: Comparable {
     static func < (lhs: Self, rhs: Self) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
+    static func > (lhs: Self, rhs: Self) -> Bool {
+        return rhs < lhs
+    }
 }
