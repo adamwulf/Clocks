@@ -71,3 +71,15 @@ extension HybridLogicalClock: RawRepresentable {
         return "\(timestamp)-\(count)-\(id)"
     }
 }
+
+// MARK: - Helpers
+
+extension HybridLogicalClock {
+    public static func distantPast(id: String? = nil) -> HybridLogicalClock {
+        return HybridLogicalClock(timestamp: 0, count: 0, id: id)
+    }
+
+    public var distantPast: HybridLogicalClock {
+        return HybridLogicalClock(timestamp: 0, count: 0, id: id)
+    }
+}
