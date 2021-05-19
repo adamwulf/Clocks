@@ -15,6 +15,10 @@ public protocol Clock: RawRepresentable, Comparable {
     func tock(now: Self, other: Self) -> Self
 
     func tock(now: Self, others: [Self]) -> Self
+
+    static func distantPast() -> Self
+
+    var distantPast: Self { get }
 }
 
 extension Clock {

@@ -30,14 +30,14 @@ public struct HybridLogicalClock: Clock {
 
     // MARK: - Public
 
-    public func tick(now: HybridLogicalClock) -> HybridLogicalClock {
+    public func tick(now: HybridLogicalClock = HybridLogicalClock()) -> HybridLogicalClock {
         if now.timestamp > timestamp {
             return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         }
         return HybridLogicalClock(timestamp: timestamp, count: count + 1, id: id)
     }
 
-    public func tock(now: HybridLogicalClock, other: HybridLogicalClock) -> HybridLogicalClock {
+    public func tock(now: HybridLogicalClock = HybridLogicalClock(), other: HybridLogicalClock) -> HybridLogicalClock {
         if now.timestamp > timestamp && now.timestamp > other.timestamp {
             return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         } else if timestamp == other.timestamp {
@@ -47,6 +47,14 @@ public struct HybridLogicalClock: Clock {
         } else {
             return HybridLogicalClock(timestamp: other.timestamp, count: other.count + 1, id: id)
         }
+    }
+
+    public static func distantPast() -> HybridLogicalClock {
+        return HybridLogicalClock(timestamp: 0, count: 0)
+    }
+
+    public var distantPast: HybridLogicalClock {
+        return HybridLogicalClock(timestamp: 0, count: 0, id: id)
     }
 }
 
@@ -69,17 +77,5 @@ extension HybridLogicalClock: RawRepresentable {
 
     public var rawValue: String {
         return "\(timestamp)-\(count)-\(id)"
-    }
-}
-
-// MARK: - Helpers
-
-extension HybridLogicalClock {
-    public static func distantPast(id: String? = nil) -> HybridLogicalClock {
-        return HybridLogicalClock(timestamp: 0, count: 0, id: id)
-    }
-
-    public var distantPast: HybridLogicalClock {
-        return HybridLogicalClock(timestamp: 0, count: 0, id: id)
     }
 }

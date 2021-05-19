@@ -20,20 +20,28 @@ public struct LamportClock: Clock {
 
     public init() {
         let id = String(String.uuid(prefix: "lam").prefix(12))
-        self.init(count: 0, id: id)
+        self.init(count: 1, id: id)
     }
 
-    public init(count: UInt = 0, id: String? = nil) {
+    public init(count: UInt = 1, id: String? = nil) {
         self.count = count
         self.id = id ?? String(String.uuid(prefix: "lam").prefix(12))
     }
 
-    public func tick(now: LamportClock) -> LamportClock {
+    public func tick(now: LamportClock = LamportClock()) -> LamportClock {
         return LamportClock(count: max(count, now.count) + 1, id: id)
     }
 
-    public func tock(now: LamportClock, other: LamportClock) -> LamportClock {
+    public func tock(now: LamportClock = LamportClock(), other: LamportClock) -> LamportClock {
         return LamportClock(count: max(count, max(now.count, other.count)) + 1, id: id)
+    }
+
+    public static func distantPast() -> LamportClock {
+        return LamportClock(count: 0)
+    }
+
+    public var distantPast: LamportClock {
+        return LamportClock(count: 0, id: id)
     }
 }
 

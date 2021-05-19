@@ -22,10 +22,10 @@ struct VectorClock: Clock {
     let others: [String: UInt]
 
     init() {
-        self.init(count: 0, id: String(String.uuid(prefix: "vec").prefix(12)))
+        self.init(count: 1, id: String(String.uuid(prefix: "vec").prefix(12)))
     }
 
-    init(count: UInt = 0, id: String? = nil, others: [String: UInt] = [:]) {
+    init(count: UInt = 1, id: String? = nil, others: [String: UInt] = [:]) {
         if id?.contains(":") ?? false {
             fatalError("Invalid Identifier. VectorClocks may not contain ':' in their id.")
         }
@@ -50,6 +50,14 @@ struct VectorClock: Clock {
             return result.merging(clock: clock.asDictionary())
         }
         return updated.clock(for: id).tick()
+    }
+
+    public static func distantPast() -> VectorClock {
+        return VectorClock()
+    }
+
+    public var distantPast: VectorClock {
+        return VectorClock(count: 0, id: id, others: others.mapValues({ _ in 0 }))
     }
 }
 
