@@ -11,9 +11,9 @@ import Foundation
 public struct HybridLogicalClock: Clock {
     public typealias RawValue = String
 
-    let timestamp: TimeInterval
-    let count: Int
-    let id: String
+    public let timestamp: TimeInterval
+    public let count: Int
+    public let id: String
 
     // MARK: - Init
 
