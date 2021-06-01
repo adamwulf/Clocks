@@ -19,10 +19,10 @@ public struct HybridLogicalClock: Clock {
 
     public init() {
         let id = String(String.uuid(prefix: "hlc").prefix(12))
-        self.init(timestamp: Date.timeIntervalSinceReferenceDate, count: 0, id: id)
+        self.init(timestamp: Date().timeIntervalSince1970, count: 0, id: id)
     }
 
-    public init(timestamp: TimeInterval = Date.timeIntervalSinceReferenceDate, count: Int = 0, id: String? = nil) {
+    public init(timestamp: TimeInterval = Date().timeIntervalSince1970, count: Int = 0, id: String? = nil) {
         self.timestamp = timestamp
         self.count = count
         self.id = id ?? String(String.uuid(prefix: "hlc").prefix(12))
