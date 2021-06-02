@@ -99,4 +99,28 @@ final class LamportClockTests: XCTestCase {
             XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id <= this.id))
         }
     }
+
+    func testComparable() throws {
+        let id1 = "clock-1"
+        let id2 = "clock-2"
+        var clocks = [
+            LamportClock(count: 1, id: id1),
+            LamportClock(count: 4, id: id1),
+            LamportClock(count: 4, id: id1),
+            LamportClock(count: 6, id: id1),
+            LamportClock(count: 2, id: id2),
+            LamportClock(count: 3, id: id2),
+            LamportClock(count: 4, id: id2),
+            LamportClock(count: 5, id: id2),
+        ]
+        clocks.sort()
+
+        // ensure clocks sort by timestamp, then by count, then by id
+        for i in 1..<clocks.count {
+            let prev = clocks[i - 1]
+            let this = clocks[i]
+
+            XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id <= this.id))
+        }
+    }
 }

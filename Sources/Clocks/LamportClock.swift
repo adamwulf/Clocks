@@ -64,3 +64,16 @@ extension LamportClock: RawRepresentable {
         return "\(count)-\(id)"
     }
 }
+
+// MARK: - Comparable
+extension LamportClock: Comparable {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        return lhs.count < rhs.count || (lhs.count == rhs.count && lhs.id < rhs.id)
+    }
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.count == rhs.count && lhs.id == rhs.id
+    }
+    public static func > (lhs: Self, rhs: Self) -> Bool {
+        return rhs < lhs
+    }
+}

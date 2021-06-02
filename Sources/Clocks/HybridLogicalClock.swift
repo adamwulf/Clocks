@@ -79,3 +79,19 @@ extension HybridLogicalClock: RawRepresentable {
         return "\(timestamp)-\(count)-\(id)"
     }
 }
+
+// MARK: - Comparable
+extension HybridLogicalClock: Comparable {
+    public static func < (lhs: Self, rhs: Self) -> Bool {
+        return
+            lhs.timestamp < rhs.timestamp ||
+            (lhs.timestamp == rhs.timestamp && lhs.count < rhs.count) ||
+            (lhs.timestamp == rhs.timestamp && lhs.count == rhs.count && lhs.id < rhs.id)
+    }
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.timestamp == rhs.timestamp && lhs.count == rhs.count && lhs.id == rhs.id
+    }
+    public static func > (lhs: Self, rhs: Self) -> Bool {
+        return rhs < lhs
+    }
+}
