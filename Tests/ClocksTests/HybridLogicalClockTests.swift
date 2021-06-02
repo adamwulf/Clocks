@@ -104,29 +104,18 @@ final class HybridLogicalClockTests: XCTestCase {
     }
 
     func testComparable() throws {
-        let id1 = "clock-1"
-        let id2 = "clock-2"
-        var clocks = [
-            HybridLogicalClock(timestamp: 1, count: 0, id: id1),
-            HybridLogicalClock(timestamp: 4, count: 2, id: id1),
-            HybridLogicalClock(timestamp: 4, count: 10, id: id1),
-            HybridLogicalClock(timestamp: 6, count: 0, id: id1),
-            HybridLogicalClock(timestamp: 2, count: 0, id: id2),
-            HybridLogicalClock(timestamp: 3, count: 0, id: id2),
-            HybridLogicalClock(timestamp: 4, count: 0, id: id2),
-            HybridLogicalClock(timestamp: 5, count: 0, id: id2),
-        ]
-        clocks.sort()
+        let clock1 = HybridLogicalClock(timestamp: 4, count: 2, id: "clock-1")
+        let clock2 = HybridLogicalClock(timestamp: 4, count: 10, id: "clock-2")
 
-        // ensure clocks sort by timestamp, then by count, then by id
-        for i in 1..<clocks.count {
-            let prev = clocks[i - 1]
-            let this = clocks[i]
+        XCTAssert(clock1 < clock2)
+        XCTAssert(clock2 > clock1)
+        XCTAssert(clock1 != clock2)
 
-            XCTAssert(prev.timestamp < this.timestamp ||
-                        (prev.timestamp == this.timestamp &&
-                            (prev.count < this.count ||
-                                (prev.count == this.count && prev.id <= this.id))))
-        }
+        let clock3 = HybridLogicalClock(timestamp: 4, count: 2, id: "clock-1")
+        let clock4 = HybridLogicalClock(timestamp: 20, count: 2, id: "clock-2")
+
+        XCTAssert(clock3 < clock4)
+        XCTAssert(clock4 > clock3)
+        XCTAssert(clock3 != clock4)
     }
 }
