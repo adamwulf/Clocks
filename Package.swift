@@ -5,6 +5,11 @@ import PackageDescription
 
 let package = Package(
     name: "Clocks",
+    platforms: [
+        // Add support for all platforms starting from a specific version.
+        .macOS(.v10_15),
+        .iOS(.v9),
+    ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
