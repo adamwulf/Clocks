@@ -95,8 +95,8 @@ extension VectorClock: RawRepresentable {
             case let pairs = Self.parseIdCounts(from: rawValue),
             !pairs.isEmpty,
             var firstPair = pairs.first,
-            case let pairs = pairs[1...],
-            case let others: [String: UInt] = pairs.reduce([:], { result, pair in
+            case let lastPairs = pairs[1...],
+            case let others: [String: UInt] = lastPairs.reduce([:], { result, pair in
                 var result = result
                 if pair.id == firstPair.id {
                     firstPair.count = max(pair.count, firstPair.count)
