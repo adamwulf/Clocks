@@ -30,14 +30,14 @@ public struct HybridLogicalClock: Clock {
 
     // MARK: - Public
 
-    public func tick(now: HybridLogicalClock = HybridLogicalClock()) -> HybridLogicalClock {
+    public func tick(now: HybridLogicalClock = HybridLogicalClock(id: "Clocks.static")) -> HybridLogicalClock {
         if now.timestamp > timestamp {
             return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         }
         return HybridLogicalClock(timestamp: timestamp, count: count + 1, id: id)
     }
 
-    public func tock(now: HybridLogicalClock = HybridLogicalClock(), other: HybridLogicalClock) -> HybridLogicalClock {
+    public func tock(now: HybridLogicalClock = HybridLogicalClock(id: "Clocks.static"), other: HybridLogicalClock) -> HybridLogicalClock {
         if now.timestamp > timestamp && now.timestamp > other.timestamp {
             return HybridLogicalClock(timestamp: now.timestamp, count: 0, id: id)
         } else if timestamp == other.timestamp {
@@ -50,7 +50,7 @@ public struct HybridLogicalClock: Clock {
     }
 
     public static func distantPast() -> HybridLogicalClock {
-        return HybridLogicalClock(timestamp: 0, count: 0)
+        return HybridLogicalClock(timestamp: 0, count: 0, id: "Clocks.static")
     }
 
     public var distantPast: HybridLogicalClock {
