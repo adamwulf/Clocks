@@ -39,9 +39,9 @@ final class HybridLogicalClockTests: XCTestCase {
     }
 
     func testRawValue() throws {
-        let now: TimeInterval = 1
+        let now: UInt64 = 1000
 
-        let clock1 = HybridLogicalClock(timestamp: now)
+        let clock1 = HybridLogicalClock(milliseconds: now)
         let clock2 = HybridLogicalClock(rawValue: clock1.rawValue)
 
         XCTAssertEqual(clock1.rawValue, "\(now)-0-\(clock1.id)")
@@ -52,19 +52,19 @@ final class HybridLogicalClockTests: XCTestCase {
         let now1 = HybridLogicalClock(timestamp: 1)
         let now2 = HybridLogicalClock(timestamp: 2)
 
-        let clock1 = HybridLogicalClock(timestamp: now1.timestamp)
+        let clock1 = HybridLogicalClock(milliseconds: now1.milliseconds)
         let clock2 = clock1.tick(now: now1)
         let clock3 = clock2.tick(now: now2)
 
-        XCTAssertEqual(clock1.rawValue, "\(now1.timestamp)-0-\(clock1.id)")
-        XCTAssertEqual(clock2.rawValue, "\(now1.timestamp)-1-\(clock1.id)")
-        XCTAssertEqual(clock3.rawValue, "\(now2.timestamp)-0-\(clock1.id)")
+        XCTAssertEqual(clock1.rawValue, "\(now1.milliseconds)-0-\(clock1.id)")
+        XCTAssertEqual(clock2.rawValue, "\(now1.milliseconds)-1-\(clock1.id)")
+        XCTAssertEqual(clock3.rawValue, "\(now2.milliseconds)-0-\(clock1.id)")
     }
 
     func testRawRepresentable() throws {
-        let now: TimeInterval = 1
-        let clock1 = HybridLogicalClock(timestamp: now, count: 0, id: "clock-1")
-        let clock2 = HybridLogicalClock(timestamp: now, count: 0)
+        let now: UInt64 = 1000
+        let clock1 = HybridLogicalClock(milliseconds: now, count: 0, id: "clock-1")
+        let clock2 = HybridLogicalClock(milliseconds: now, count: 0)
 
         XCTAssertEqual(clock1.rawValue, "\(now)-0-\(clock1.id)")
         XCTAssertEqual(clock2.rawValue, "\(now)-0-\(clock2.id)")
@@ -96,8 +96,8 @@ final class HybridLogicalClockTests: XCTestCase {
             let prev = clocks[i - 1]
             let this = clocks[i]
 
-            XCTAssert(prev.timestamp < this.timestamp ||
-                        (prev.timestamp == this.timestamp &&
+            XCTAssert(prev.milliseconds < this.milliseconds ||
+                        (prev.milliseconds == this.milliseconds &&
                             (prev.count < this.count ||
                                 (prev.count == this.count && prev.id <= this.id))))
         }
