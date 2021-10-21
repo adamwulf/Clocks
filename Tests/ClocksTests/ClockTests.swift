@@ -15,7 +15,7 @@ class ClockTests: XCTestCase {
         return SimpleIdentifier(rawValue: Data(id))!
     }()
 
-    lazy var id2: Identifier = {
+    lazy var id2: SimpleIdentifier = {
         var id = [UInt8](repeating: 0, count: SimpleIdentifier.requiredSize)
         id[SimpleIdentifier.requiredSize - 1] = 2
         return SimpleIdentifier(rawValue: Data(id))!

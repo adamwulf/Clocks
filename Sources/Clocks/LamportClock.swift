@@ -21,13 +21,13 @@ public struct LamportClock: Clock {
     let id: Identifier
 
     public init() {
-        let id = SimpleIdentifier.random()
+        let id = SimpleIdentifier()
         self.init(count: 1, id: id)
     }
 
     public init(count: UInt = 1, id: Identifier? = nil) {
         self.count = count
-        self.id = id ?? SimpleIdentifier.random()
+        self.id = id ?? SimpleIdentifier()
     }
 
     public func tick(now: LamportClock = LamportClock(id: Self.defaultIdentifier)) -> LamportClock {

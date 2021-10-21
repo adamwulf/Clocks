@@ -12,21 +12,21 @@ public struct HybridLogicalClock<IdType: Identifier>: Clock {
     fileprivate var cachedDataValue = DataCache()
     public let milliseconds: UInt64
     public let count: UInt16
-    public let id: Identifier
+    public let id: IdType
 
     // MARK: - Init
 
     public init() {
-        let id = SimpleIdentifier.random()
+        let id = IdType()
         self.init(timestamp: Date().timeIntervalSince1970, count: 0, id: id)
     }
 
-    public init(timestamp: TimeInterval = Date().timeIntervalSince1970, count: UInt16 = 0, id: Identifier? = nil) {
+    public init(timestamp: TimeInterval = Date().timeIntervalSince1970, count: UInt16 = 0, id: IdType? = nil) {
         self.init(milliseconds: timestamp.milliseconds, count: count, id: id)
     }
 
-    public init(milliseconds: UInt64, count: UInt16 = 0, id: Identifier? = nil) {
-        let id = id ?? SimpleIdentifier.random()
+    public init(milliseconds: UInt64, count: UInt16 = 0, id: IdType? = nil) {
+        let id = id ?? IdType()
         self.milliseconds = milliseconds
         self.count = count
         self.id = id

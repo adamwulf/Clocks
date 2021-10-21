@@ -10,6 +10,7 @@ import Foundation
 public protocol Identifier {
     static var defaultIdentifier: Self { get }
     static var requiredSize: Int { get }
+    init()
     init?(rawValue: Data)
     var rawValue: Data { get }
 }
@@ -38,6 +39,10 @@ struct SimpleIdentifier: Identifier {
     static let requiredSize: Int = 16
     let data: Data
 
+    init() {
+        data = Data.random(length: Self.requiredSize)
+    }
+
     init?(rawValue: Data) {
         guard rawValue.count == Self.requiredSize else { return nil }
         data = rawValue
@@ -45,9 +50,5 @@ struct SimpleIdentifier: Identifier {
 
     var rawValue: Data {
         return data
-    }
-
-    static func random() -> Identifier {
-        return SimpleIdentifier(rawValue: Data.random(length: Self.requiredSize))!
     }
 }
