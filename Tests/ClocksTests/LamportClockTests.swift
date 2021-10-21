@@ -8,7 +8,7 @@
 import XCTest
 @testable import Clocks
 
-final class LamportClockTests: XCTestCase {
+final class LamportClockTests: ClockTests {
 
     func testTick() throws {
         let clock1 = LamportClock()
@@ -41,10 +41,10 @@ final class LamportClockTests: XCTestCase {
     func testRawValue() throws {
         let now: UInt = 1
 
-        let clock1 = LamportClock(count: now)
+        let clock1 = LamportClock(count: now, id: id1)
         let clock2 = LamportClock(rawValue: clock1.rawValue)
 
-        XCTAssertEqual(clock1.rawValue, "\(now)-\(clock1.id)")
+        XCTAssertEqual(clock1.rawValue.hexString, "000000000000000100000000000000000000000000000001")
         XCTAssertEqual(clock1, clock2)
     }
 
@@ -52,22 +52,22 @@ final class LamportClockTests: XCTestCase {
         let now1 = LamportClock(count: 1)
         let now2 = LamportClock(count: 2)
 
-        let clock1 = LamportClock(count: now1.count)
+        let clock1 = LamportClock(count: now1.count, id: id1)
         let clock2 = clock1.tick(now: now1)
         let clock3 = clock2.tick(now: now2)
 
-        XCTAssertEqual(clock1.rawValue, "\(now1.count)-\(clock1.id)")
-        XCTAssertEqual(clock2.rawValue, "\(now1.count + 1)-\(clock1.id)")
-        XCTAssertEqual(clock3.rawValue, "\(now2.count + 1)-\(clock1.id)")
+        XCTAssertEqual(clock1.rawValue.hexString, "000000000000000100000000000000000000000000000001")
+        XCTAssertEqual(clock2.rawValue.hexString, "000000000000000200000000000000000000000000000001")
+        XCTAssertEqual(clock3.rawValue.hexString, "000000000000000300000000000000000000000000000001")
     }
 
     func testRawRepresentable() throws {
         let now: UInt = 1
-        let clock1 = LamportClock(count: now, id: "clock-1")
-        let clock2 = LamportClock(count: now)
+        let clock1 = LamportClock(count: now, id: id1)
+        let clock2 = LamportClock(count: now, id: id2)
 
-        XCTAssertEqual(clock1.rawValue, "\(now)-\(clock1.id)")
-        XCTAssertEqual(clock2.rawValue, "\(now)-\(clock2.id)")
+        XCTAssertEqual(clock1.rawValue.hexString, "000000000000000100000000000000000000000000000001")
+        XCTAssertEqual(clock2.rawValue.hexString, "000000000000000100000000000000000000000000000002")
 
         let clock11 = LamportClock(rawValue: clock1.rawValue)
         let clock22 = LamportClock(rawValue: clock2.rawValue)
@@ -77,8 +77,6 @@ final class LamportClockTests: XCTestCase {
     }
 
     func testSort() throws {
-        let id1 = "clock-1"
-        let id2 = "clock-2"
         var clocks = [
             LamportClock(count: 1, id: id1),
             LamportClock(count: 4, id: id1),
@@ -101,8 +99,6 @@ final class LamportClockTests: XCTestCase {
     }
 
     func testComparable() throws {
-        let id1 = "clock-1"
-        let id2 = "clock-2"
         var clocks = [
             LamportClock(count: 1, id: id1),
             LamportClock(count: 4, id: id1),

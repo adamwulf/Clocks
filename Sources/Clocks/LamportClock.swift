@@ -15,24 +15,26 @@ import Foundation
 /// On receiving a message, the receiver process sets its counter to be greater than the maximum
 /// of its own value and the received value before it considers the message received.
 public struct LamportClock: Clock {
+    public static let defaultIdentifier: Data = Data([UInt8].init(repeating: 0, count: 16))
+    fileprivate var cachedDataValue = DataCache()
     let count: UInt
-    let id: String
+    let id: Data
 
     public init() {
-        let id = String(String.uuid(prefix: "lam").prefix(12))
+        let id = Data.random(length: 16)
         self.init(count: 1, id: id)
     }
 
-    public init(count: UInt = 1, id: String? = nil) {
+    public init(count: UInt = 1, id: Data? = nil) {
         self.count = count
-        self.id = id ?? String(String.uuid(prefix: "lam").prefix(12))
+        self.id = id ?? Data.random(length: 16)
     }
 
-    public func tick(now: LamportClock = LamportClock()) -> LamportClock {
+    public func tick(now: LamportClock = LamportClock(id: Self.defaultIdentifier)) -> LamportClock {
         return LamportClock(count: max(count, now.count) + 1, id: id)
     }
 
-    public func tock(now: LamportClock = LamportClock(), other: LamportClock) -> LamportClock {
+    public func tock(now: LamportClock = LamportClock(id: Self.defaultIdentifier), other: LamportClock) -> LamportClock {
         return LamportClock(count: max(count, max(now.count, other.count)) + 1, id: id)
     }
 
@@ -46,22 +48,35 @@ public struct LamportClock: Clock {
 }
 
 extension LamportClock: RawRepresentable {
-    public typealias RawValue = String
+    public typealias RawValue = Data
 
-    public init?(rawValue: String) {
-        guard
-            case let comps = rawValue.split(separator: "-"),
-            comps.count >= 2,
-            let count = UInt(comps[0]),
-            case let id = String(comps[1...].joined(separator: "-"))
-        else {
-            return nil
-        }
-        self.init(count: count, id: id)
+    static let countSize = MemoryLayout<UInt>.size
+    static let idSize = 16 // 16 bytes for the device id
+
+    public init?(rawValue: Data) {
+        guard rawValue.count >= Self.countSize + Self.idSize else { return nil }
+        let bytes: [UInt8] = [UInt8](rawValue)
+        let bigEndianCount = bytes[0..<Self.countSize].withUnsafeBytes({ $0.load(as: UInt.self) })
+        let count = UInt(bigEndian: bigEndianCount)
+        let idBytes: [UInt8] = Array(bytes[Self.countSize..<bytes.count])
+        guard idBytes.count == Self.idSize else { return nil }
+
+        self.init(count: count, id: Data(idBytes))
     }
 
-    public var rawValue: String {
-        return "\(count)-\(id)"
+    public var rawValue: Data {
+        if let cachedDataValue = cachedDataValue.cache {
+            return cachedDataValue
+        }
+        var bytes: [UInt8] = []
+        withUnsafeBytes(of: count) { pointer in
+            // little endian by default on iOS/macOS, so reverse to get bigEndian
+            bytes.append(contentsOf: pointer.reversed())
+        }
+        bytes.append(contentsOf: id)
+        let ret = Data(bytes)
+        cachedDataValue.cache = ret
+        return ret
     }
 }
 

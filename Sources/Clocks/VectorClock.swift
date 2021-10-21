@@ -17,20 +17,19 @@ import Foundation
 /// each element in its vector by taking the maximum of the value in its own vector clock and the value in the vector
 /// in the received message (for every element).
 struct VectorClock: Clock {
+    public static let defaultIdentifier: Data = Data([UInt8].init(repeating: 0, count: 16))
+    fileprivate var cachedDataValue = DataCache()
     let count: UInt
-    let id: String
-    let others: [String: UInt]
+    let id: Data
+    let others: [Data: UInt]
 
     init() {
-        self.init(count: 1, id: String(String.uuid(prefix: "vec").prefix(12)))
+        self.init(count: 1, id: Data.random(length: 16))
     }
 
-    init(count: UInt = 1, id: String? = nil, others: [String: UInt] = [:]) {
-        if id?.contains(":") ?? false {
-            fatalError("Invalid Identifier. VectorClocks may not contain ':' in their id.")
-        }
+    init(count: UInt = 1, id: Data? = nil, others: [Data: UInt] = [:]) {
         self.count = count
-        self.id = id ?? String(String.uuid(prefix: "vec").prefix(12))
+        self.id = id ?? Data.random(length: 16)
         self.others = others
     }
 
@@ -62,13 +61,13 @@ struct VectorClock: Clock {
 }
 
 extension VectorClock {
-    func asDictionary() -> [String: UInt] {
+    func asDictionary() -> [Data: UInt] {
         return others.merging([id: count], uniquingKeysWith: { a, _ in a })
     }
 }
 
-extension Dictionary where Key == String, Value == UInt {
-    func merging(clock: [String: UInt]) -> [String: UInt] {
+extension Dictionary where Key == Data, Value == UInt {
+    func merging(clock: [Data: UInt]) -> [Data: UInt] {
         var ret = self
         for (key, value) in clock {
             ret[key] = Swift.max(ret[key] ?? 0, value)
@@ -76,7 +75,7 @@ extension Dictionary where Key == String, Value == UInt {
         return ret
     }
 
-    func clock(for id: String) -> VectorClock {
+    func clock(for id: Data) -> VectorClock {
         assert(keys.contains(id))
         var others = self
         let value = self[id]!
@@ -86,61 +85,57 @@ extension Dictionary where Key == String, Value == UInt {
 }
 
 extension VectorClock: RawRepresentable {
-    public typealias RawValue = String
+    public typealias RawValue = Data
 
-    public init?(rawValue: String) {
-        guard
-            case let comps = rawValue.split(separator: ":"),
-            comps.count % 2 == 0,
-            case let pairs = Self.parseIdCounts(from: rawValue),
-            !pairs.isEmpty,
-            var firstPair = pairs.first,
-            case let lastPairs = pairs[1...],
-            case let others: [String: UInt] = lastPairs.reduce([:], { result, pair in
-                var result = result
-                if pair.id == firstPair.id {
-                    firstPair.count = max(pair.count, firstPair.count)
-                } else {
-                    let existing = result[pair.id] ?? 0
-                    result[pair.id] = max(pair.count, existing)
-                }
-                return result
-            })
-        else {
-            return nil
+    static let countSize = MemoryLayout<UInt>.size
+    static let idSize = 16 // 16 bytes for the device id
+
+    public init?(rawValue: Data) {
+        guard rawValue.count >= Self.countSize + Self.idSize else { return nil }
+
+        func vector(from: Data) -> (id: Data, count: UInt)? {
+            guard rawValue.count == Self.countSize + Self.idSize else { return nil }
+            let id = rawValue[0..<Self.idSize]
+            let countBytes = [UInt8](rawValue[Self.idSize..<Self.countSize + Self.idSize])
+            let bigEndianCount = countBytes.withUnsafeBytes({ $0.load(as: UInt.self) })
+            let count = UInt(bigEndian: bigEndianCount)
+            return (id: id, count: count)
         }
-        self.init(count: firstPair.count, id: firstPair.id, others: others)
-    }
 
-    public var rawValue: String {
-        var othersStr = ""
-        for key in others.keys.sorted() {
-            guard let count = others[key] else { continue }
-            if !othersStr.isEmpty {
-                othersStr += ":"
+        guard let firstPair = vector(from: rawValue[0..<Self.countSize + Self.idSize]) else { return nil }
+
+        let othersData = rawValue[Self.countSize + Self.idSize..<rawValue.count]
+        var pairs: [Data: UInt] = [:]
+        for i in stride(from: 0, to: othersData.count, by: Self.countSize + Self.idSize) {
+            if let pair = vector(from: othersData[i..<i + Self.countSize + Self.idSize]) {
+                pairs[pair.id] = pair.count
             }
-            othersStr += "\(key):\(count)"
         }
-        if othersStr.isEmpty {
-            return "\(id):\(count)"
-        } else {
-            return "\(id):\(count):\(othersStr)"
-        }
+        self.init(count: firstPair.count, id: firstPair.id, others: pairs)
     }
-}
 
-fileprivate extension VectorClock {
-    static func parseIdCounts(from rawValue: String) -> [(id: String, count: UInt)] {
-        if
-            case let comps = rawValue.split(separator: ":"),
-            comps.count % 2 == 0,
-            case let pairs = comps.compactMap(pairs: { id, countStr -> (id: String, count: UInt)? in
-                guard let count = UInt(countStr) else { return nil }
-                return (id: String(id), count: count)
-            }) {
-            return pairs
+    public var rawValue: Data {
+        if let cachedDataValue = cachedDataValue.cache {
+            return cachedDataValue
         }
-        return []
+        var bytes: [UInt8] = [UInt8](id)
+        withUnsafeBytes(of: count) { pointer in
+            // little endian by default on iOS/macOS, so reverse to get bigEndian
+            bytes.append(contentsOf: pointer.reversed())
+        }
+
+        for key in others.keys.sorted(by: { $0 < $1 }) {
+            guard let count = others[key] else { continue }
+
+            bytes.append(contentsOf: key)
+            withUnsafeBytes(of: count) { pointer in
+                // little endian by default on iOS/macOS, so reverse to get bigEndian
+                bytes.append(contentsOf: pointer.reversed())
+            }
+        }
+        let ret = Data(bytes)
+        cachedDataValue.cache = ret
+        return ret
     }
 }
 
