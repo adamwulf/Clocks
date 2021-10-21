@@ -29,11 +29,11 @@ final class LamportClockTests: ClockTests {
 
         XCTAssert(clock2.rawValue > clock1.rawValue)
         XCTAssert(clock31.rawValue > clock2.rawValue)
-        XCTAssert(clock31.id == clock1.id)
+        XCTAssert(clock31.id.rawValue == clock1.id.rawValue)
         XCTAssert(clock32.rawValue > clock2.rawValue)
-        XCTAssert(clock32.id == clock1.id)
+        XCTAssert(clock32.id.rawValue == clock1.id.rawValue)
         XCTAssert(clock33.rawValue > clock2.rawValue)
-        XCTAssert(clock33.id == clock1.id)
+        XCTAssert(clock33.id.rawValue == clock1.id.rawValue)
         XCTAssertEqual(clock31, clock32)
         XCTAssertEqual(clock32, clock33)
     }
@@ -94,7 +94,7 @@ final class LamportClockTests: ClockTests {
             let prev = clocks[i - 1]
             let this = clocks[i]
 
-            XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id <= this.id))
+            XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id.rawValue <= this.id.rawValue))
         }
     }
 
@@ -116,7 +116,7 @@ final class LamportClockTests: ClockTests {
             let prev = clocks[i - 1]
             let this = clocks[i]
 
-            XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id <= this.id))
+            XCTAssert(prev.count < this.count || (prev.count == this.count && prev.id.rawValue <= this.id.rawValue))
         }
     }
 }

@@ -15,19 +15,19 @@ import Foundation
 /// On receiving a message, the receiver process sets its counter to be greater than the maximum
 /// of its own value and the received value before it considers the message received.
 public struct LamportClock: Clock {
-    public static let defaultIdentifier: Data = Data([UInt8].init(repeating: 0, count: 16))
+    public static let defaultIdentifier: Identifier = SimpleIdentifier.defaultIdentifier
     fileprivate var cachedDataValue = DataCache()
     let count: UInt
-    let id: Data
+    let id: Identifier
 
     public init() {
-        let id = Data.random(length: 16)
+        let id = SimpleIdentifier.random()
         self.init(count: 1, id: id)
     }
 
-    public init(count: UInt = 1, id: Data? = nil) {
+    public init(count: UInt = 1, id: Identifier? = nil) {
         self.count = count
-        self.id = id ?? Data.random(length: 16)
+        self.id = id ?? SimpleIdentifier.random()
     }
 
     public func tick(now: LamportClock = LamportClock(id: Self.defaultIdentifier)) -> LamportClock {
@@ -61,7 +61,7 @@ extension LamportClock: RawRepresentable {
         let idBytes: [UInt8] = Array(bytes[Self.countSize..<bytes.count])
         guard idBytes.count == Self.idSize else { return nil }
 
-        self.init(count: count, id: Data(idBytes))
+        self.init(count: count, id: SimpleIdentifier(rawValue: Data(idBytes)))
     }
 
     public var rawValue: Data {
@@ -73,7 +73,7 @@ extension LamportClock: RawRepresentable {
             // little endian by default on iOS/macOS, so reverse to get bigEndian
             bytes.append(contentsOf: pointer.reversed())
         }
-        bytes.append(contentsOf: id)
+        bytes.append(contentsOf: id.rawValue)
         let ret = Data(bytes)
         cachedDataValue.cache = ret
         return ret
@@ -83,10 +83,10 @@ extension LamportClock: RawRepresentable {
 // MARK: - Comparable
 extension LamportClock: Comparable {
     public static func < (lhs: Self, rhs: Self) -> Bool {
-        return lhs.count < rhs.count || (lhs.count == rhs.count && lhs.id < rhs.id)
+        return lhs.count < rhs.count || (lhs.count == rhs.count && lhs.id.rawValue < rhs.id.rawValue)
     }
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.count == rhs.count && lhs.id == rhs.id
+        return lhs.count == rhs.count && lhs.id.rawValue == rhs.id.rawValue
     }
     public static func > (lhs: Self, rhs: Self) -> Bool {
         return rhs < lhs

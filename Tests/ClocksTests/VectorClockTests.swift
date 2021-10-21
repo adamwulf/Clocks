@@ -11,7 +11,7 @@ import XCTest
 final class VectorClockTests: ClockTests {
 
     func testTick() throws {
-        let clock1 = VectorClock(id: id1)
+        let clock1 = VectorClock(id: id1.rawValue)
         let clock2 = clock1.tick()
 
         XCTAssert(clock2.rawValue > clock1.rawValue)
@@ -19,8 +19,8 @@ final class VectorClockTests: ClockTests {
     }
 
     func testReversingClock() throws {
-        let clock1 = VectorClock(count: 1, id: id1)
-        let clock2 = VectorClock(count: 2, id: id2)
+        let clock1 = VectorClock(count: 1, id: id1.rawValue)
+        let clock2 = VectorClock(count: 2, id: id2.rawValue)
         // use a previous timestamp, and ensure that our ticked clocks are after existing timestamps
         let clock31 = clock1.tock(other: clock2)
         let clock32 = clock1.tock(others: [clock1, clock2])
@@ -36,7 +36,7 @@ final class VectorClockTests: ClockTests {
     func testRawValue() throws {
         let now: UInt = 1
 
-        let clock1 = VectorClock(count: now, id: id1)
+        let clock1 = VectorClock(count: now, id: id1.rawValue)
         let clock2 = VectorClock(rawValue: clock1.rawValue)
 
         XCTAssertEqual(clock1.rawValue.hexString, "000000000000000000000000000000010000000000000001")
@@ -44,8 +44,8 @@ final class VectorClockTests: ClockTests {
     }
 
     func testIncCount() throws {
-        let clock1 = VectorClock(count: 1, id: id1)
-        let clock2 = VectorClock(count: 1, id: id2)
+        let clock1 = VectorClock(count: 1, id: id1.rawValue)
+        let clock2 = VectorClock(count: 1, id: id2.rawValue)
         let clock3 = clock1.tick()
         let clock4 = clock3.tock(other: clock2)
         let clock5 = clock2.tock(other: clock4)
@@ -59,8 +59,8 @@ final class VectorClockTests: ClockTests {
 
     func testRawRepresentable() throws {
         let now: UInt = 1
-        let clock1 = VectorClock(count: now, id: id1)
-        let clock2 = VectorClock(count: now, id: id2)
+        let clock1 = VectorClock(count: now, id: id1.rawValue)
+        let clock2 = VectorClock(count: now, id: id2.rawValue)
 
         XCTAssertEqual(clock1.rawValue.hexString, "000000000000000000000000000000010000000000000001")
         XCTAssertEqual(clock2.rawValue.hexString, "000000000000000000000000000000020000000000000001")
@@ -73,8 +73,8 @@ final class VectorClockTests: ClockTests {
     }
 
     func testVectorOrdering() throws {
-        let a1 = VectorClock(id: id1)
-        let b1 = VectorClock(id: id2)
+        let a1 = VectorClock(id: id1.rawValue)
+        let b1 = VectorClock(id: id2.rawValue)
 
         // neither clock has seen the other, so they're not <
         XCTAssertFalse(a1 < b1)
